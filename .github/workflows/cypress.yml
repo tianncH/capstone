@@ -1,0 +1,149 @@
+name: Cypress E2E Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'admin/**'
+      - 'counter/**'
+      - 'kitchen/**'
+      - 'ordering/**'
+      - 'cypress/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        # Run tests in different browsers
+        browser: [chrome, firefox]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g cypress
+      
+      - name: Install PHP and Apache
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y php php-mysql apache2 libapache2-mod-php
+          sudo systemctl start apache2
+      
+      - name: Setup Database
+        run: |
+          sudo mysql -e "CREATE DATABASE IF NOT EXISTS restaurant_system;"
+          sudo mysql restaurant_system < restaurant_ordering_system.sql || true
+        env:
+          MYSQL_ROOT_PASSWORD: root
+      
+      - name: Setup XAMPP equivalent
+        run: |
+          sudo mv c:/xampp/htdocs/capstone/* /var/www/html/capstone/
+          sudo systemctl restart apache2
+      
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v6
+        with:
+          browser: ${{ matrix.browser }}
+          start: |
+            sudo systemctl start apache2
+            sudo systemctl start mysql
+          wait-on: 'http://localhost/capstone/admin/login.php'
+          wait-on-timeout: 60
+      
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots-${{ matrix.browser }}
+          path: cypress/screenshots
+          retention-days: 7
+      
+      - name: Upload videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos-${{ matrix.browser }}
+          path: cypress/videos
+          retention-days: 7
+
+  # Run tests in headless mode
+  cypress-headless:
+    runs-on: ubuntu-latest
+    needs: []
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g cypress
+      
+      - name: Install PHP and Apache
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y php php-mysql apache2 libapache2-mod-php mysql-server
+          sudo systemctl start apache2
+          sudo systemctl start mysql
+      
+      - name: Setup Database
+        run: |
+          sudo mysql -e "CREATE DATABASE IF NOT EXISTS restaurant_system;"
+          sudo mysql restaurant_system < restaurant_ordering_system.sql || true
+        env:
+          MYSQL_ROOT_PASSWORD: root
+      
+      - name: Configure Apache
+        run: |
+          sudo mkdir -p /var/www/html/capstone
+          sudo cp -r admin counter kitchen ordering /var/www/html/capstone/
+          sudo systemctl restart apache2
+      
+      - name: Verify server is running
+        run: |
+          curl -f http://localhost/capstone/admin/login.php || exit 1
+      
+      - name: Run Cypress tests
+        run: |
+          npx cypress run --config baseUrl=http://localhost/capstone
+        env:
+          CYPRESS_baseUrl: http://localhost/capstone
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-results
+          path: |
+            cypress/screenshots
+            cypress/videos
+          retention-days: 7
+
+
+

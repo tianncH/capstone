@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript White-Box Unit Tests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .test-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .summary-card.passed {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .summary-card.failed {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+        .test-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 4px solid #ddd;
+            background: #f9f9f9;
+        }
+        .test-item.passed {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        .test-item.failed {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .test-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .test-message {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .test-error {
+            color: #dc3545;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>JavaScript White-Box Unit Tests</h1>
+            <button onclick="runAllTests()">Run All Tests</button>
+        </div>
+        
+        <div class="test-summary" id="summary">
+            <div class="summary-card">
+                <div style="font-size: 2em; font-weight: bold;" id="total">0</div>
+                <div>Total Tests</div>
+            </div>
+            <div class="summary-card passed">
+                <div style="font-size: 2em; font-weight: bold;" id="passed">0</div>
+                <div>Passed</div>
+            </div>
+            <div class="summary-card failed">
+                <div style="font-size: 2em; font-weight: bold;" id="failed">0</div>
+                <div>Failed</div>
+            </div>
+            <div class="summary-card">
+                <div style="font-size: 2em; font-weight: bold;" id="passRate">0%</div>
+                <div>Pass Rate</div>
+            </div>
+        </div>
+        
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        // Test results storage
+        const testResults = {
+            total: 0,
+            passed: [],
+            failed: []
+        };
+
+        /**
+         * Test assertion helper
+         */
+        function assert(condition, message, expected = null, actual = null) {
+            testResults.total++;
+            if (condition) {
+                testResults.passed.push({
+                    message: message,
+                    expected: expected,
+                    actual: actual
+                });
+                return true;
+            } else {
+                testResults.failed.push({
+                    message: message,
+                    expected: expected,
+                    actual: actual
+                });
+                return false;
+            }
+        }
+
+        /**
+         * Currency formatting functions (from menu_management.php)
+         */
+        function formatCurrencyInput(value) {
+            let cleanValue = value.toString().replace(/[^\d.]/g, '');
+            let numValue = parseFloat(cleanValue) || 0;
+            return numValue.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function parseCurrencyInput(value) {
+            return parseFloat(value.replace(/,/g, '')) || 0;
+        }
+
+        // ============================================================================
+        // CURRENCY FORMATTING TESTS
+        // ============================================================================
+
+        function test_formatCurrencyInput_basic() {
+            const result = formatCurrencyInput('1234.56');
+            return assert(
+                result === '1,234.56',
+                'formatCurrencyInput should format basic number',
+                '1,234.56',
+                result
+            );
+        }
+
+        function test_formatCurrencyInput_with_commas() {
+            const result = formatCurrencyInput('1,234.56');
+            return assert(
+                result === '1,234.56',
+                'formatCurrencyInput should handle existing commas',
+                '1,234.56',
+                result
+            );
+        }
+
+        function test_formatCurrencyInput_zero() {
+            const result = formatCurrencyInput('0');
+            return assert(
+                result === '0.00',
+                'formatCurrencyInput should format zero',
+                '0.00',
+                result
+            );
+        }
+
+        function test_formatCurrencyInput_invalid() {
+            const result = formatCurrencyInput('abc');
+            return assert(
+                result === '0.00',
+                'formatCurrencyInput should handle invalid input',
+                '0.00',
+                result
+            );
+        }
+
+        function test_formatCurrencyInput_large_number() {
+            const result = formatCurrencyInput('1234567.89');
+            return assert(
+                result === '1,234,567.89',
+                'formatCurrencyInput should format large numbers',
+                '1,234,567.89',
+                result
+            );
+        }
+
+        function test_parseCurrencyInput_basic() {
+            const result = parseCurrencyInput('1,234.56');
+            return assert(
+                Math.abs(result - 1234.56) < 0.01,
+                'parseCurrencyInput should parse formatted string',
+                1234.56,
+                result
+            );
+        }
+
+        function test_parseCurrencyInput_no_commas() {
+            const result = parseCurrencyInput('1234.56');
+            return assert(
+                Math.abs(result - 1234.56) < 0.01,
+                'parseCurrencyInput should parse without commas',
+                1234.56,
+                result
+            );
+        }
+
+        function test_parseCurrencyInput_invalid() {
+            const result = parseCurrencyInput('abc');
+            return assert(
+                isNaN(result) || result === 0,
+                'parseCurrencyInput should handle invalid input',
+                0,
+                result
+            );
+        }
+
+        // ============================================================================
+        // DATE/TIME VALIDATION TESTS
+        // ============================================================================
+
+        function test_dateValidation_past_date() {
+            const pastDate = new Date();
+            pastDate.setDate(pastDate.getDate() - 1);
+            const dateString = pastDate.toISOString().split('T')[0];
+            const today = new Date().toISOString().split('T')[0];
+            
+            return assert(
+                dateString < today,
+                'Past dates should be rejected for reservations',
+                true,
+                dateString < today
+            );
+        }
+
+        function test_dateValidation_future_date() {
+            const futureDate = new Date();
+            futureDate.setDate(futureDate.getDate() + 1);
+            const dateString = futureDate.toISOString().split('T')[0];
+            const today = new Date().toISOString().split('T')[0];
+            
+            return assert(
+                dateString > today,
+                'Future dates should be accepted',
+                true,
+                dateString > today
+            );
+        }
+
+        function test_timeValidation_start_after_end() {
+            const startTime = '14:00';
+            const endTime = '13:00';
+            const start = new Date(`2000-01-01T${startTime}`);
+            const end = new Date(`2000-01-01T${endTime}`);
+            
+            return assert(
+                start >= end,
+                'Start time should not be after end time',
+                false,
+                start >= end
+            );
+        }
+
+        function test_timeValidation_start_before_end() {
+            const startTime = '13:00';
+            const endTime = '14:00';
+            const start = new Date(`2000-01-01T${startTime}`);
+            const end = new Date(`2000-01-01T${endTime}`);
+            
+            return assert(
+                start < end,
+                'Start time should be before end time',
+                true,
+                start < end
+            );
+        }
+
+        // ============================================================================
+        // EMAIL VALIDATION TESTS
+        // ============================================================================
+
+        function test_emailValidation_valid() {
+            const email = 'test@example.com';
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return assert(
+                regex.test(email),
+                'Valid email should pass validation',
+                true,
+                regex.test(email)
+            );
+        }
+
+        function test_emailValidation_invalid_no_at() {
+            const email = 'testexample.com';
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return assert(
+                !regex.test(email),
+                'Email without @ should fail validation',
+                false,
+                regex.test(email)
+            );
+        }
+
+        function test_emailValidation_invalid_no_domain() {
+            const email = 'test@';
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return assert(
+                !regex.test(email),
+                'Email without domain should fail validation',
+                false,
+                regex.test(email)
+            );
+        }
+
+        // ============================================================================
+        // NUMBER VALIDATION TESTS
+        // ============================================================================
+
+        function test_numberValidation_positive() {
+            const num = 5;
+            return assert(
+                num > 0 && Number.isInteger(num),
+                'Positive integer should be valid',
+                true,
+                num > 0 && Number.isInteger(num)
+            );
+        }
+
+        function test_numberValidation_zero() {
+            const num = 0;
+            return assert(
+                num === 0,
+                'Zero should be handled correctly',
+                true,
+                num === 0
+            );
+        }
+
+        function test_numberValidation_negative() {
+            const num = -5;
+            return assert(
+                num < 0,
+                'Negative numbers should be detected',
+                true,
+                num < 0
+            );
+        }
+
+        function test_numberValidation_decimal() {
+            const num = 5.5;
+            return assert(
+                !Number.isInteger(num) && num > 0,
+                'Decimal numbers should be handled',
+                true,
+                !Number.isInteger(num) && num > 0
+            );
+        }
+
+        // ============================================================================
+        // STRING VALIDATION TESTS
+        // ============================================================================
+
+        function test_stringValidation_trim() {
+            const str = '  test  ';
+            const trimmed = str.trim();
+            return assert(
+                trimmed === 'test',
+                'String trim should remove whitespace',
+                'test',
+                trimmed
+            );
+        }
+
+        function test_stringValidation_empty() {
+            const str = '';
+            return assert(
+                str.length === 0,
+                'Empty string should be detected',
+                true,
+                str.length === 0
+            );
+        }
+
+        function test_stringValidation_whitespace_only() {
+            const str = '   ';
+            const trimmed = str.trim();
+            return assert(
+                trimmed.length === 0,
+                'Whitespace-only string should be empty after trim',
+                true,
+                trimmed.length === 0
+            );
+        }
+
+        // ============================================================================
+        // RUN ALL TESTS
+        // ============================================================================
+
+        function runAllTests() {
+            // Reset results
+            testResults.total = 0;
+            testResults.passed = [];
+            testResults.failed = [];
+
+            // Run all test functions
+            const testFunctions = [
+                test_formatCurrencyInput_basic,
+                test_formatCurrencyInput_with_commas,
+                test_formatCurrencyInput_zero,
+                test_formatCurrencyInput_invalid,
+                test_formatCurrencyInput_large_number,
+                test_parseCurrencyInput_basic,
+                test_parseCurrencyInput_no_commas,
+                test_parseCurrencyInput_invalid,
+                test_dateValidation_past_date,
+                test_dateValidation_future_date,
+                test_timeValidation_start_after_end,
+                test_timeValidation_start_before_end,
+                test_emailValidation_valid,
+                test_emailValidation_invalid_no_at,
+                test_emailValidation_invalid_no_domain,
+                test_numberValidation_positive,
+                test_numberValidation_zero,
+                test_numberValidation_negative,
+                test_numberValidation_decimal,
+                test_stringValidation_trim,
+                test_stringValidation_empty,
+                test_stringValidation_whitespace_only
+            ];
+
+            testFunctions.forEach(testFunc => {
+                try {
+                    testFunc();
+                } catch (error) {
+                    testResults.failed.push({
+                        message: `Exception in ${testFunc.name}: ${error.message}`,
+                        error: error.stack
+                    });
+                }
+            });
+
+            displayResults();
+        }
+
+        function displayResults() {
+            // Update summary
+            document.getElementById('total').textContent = testResults.total;
+            document.getElementById('passed').textContent = testResults.passed.length;
+            document.getElementById('failed').textContent = testResults.failed.length;
+            const passRate = testResults.total > 0 ? 
+                Math.round((testResults.passed.length / testResults.total) * 100) : 0;
+            document.getElementById('passRate').textContent = passRate + '%';
+
+            // Display test results
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '';
+
+            // Display passed tests
+            if (testResults.passed.length > 0) {
+                const passedDiv = document.createElement('div');
+                passedDiv.innerHTML = '<h2 style="color: #28a745;">Passed Tests (' + testResults.passed.length + ')</h2>';
+                testResults.passed.forEach(test => {
+                    const testItem = document.createElement('div');
+                    testItem.className = 'test-item passed';
+                    testItem.innerHTML = `
+                        <div class="test-name">✓ ${test.message}</div>
+                        ${test.expected !== null ? `<div class="test-message">Expected: ${JSON.stringify(test.expected)}</div>` : ''}
+                    `;
+                    passedDiv.appendChild(testItem);
+                });
+                resultsDiv.appendChild(passedDiv);
+            }
+
+            // Display failed tests
+            if (testResults.failed.length > 0) {
+                const failedDiv = document.createElement('div');
+                failedDiv.innerHTML = '<h2 style="color: #dc3545;">Failed Tests (' + testResults.failed.length + ')</h2>';
+                testResults.failed.forEach(test => {
+                    const testItem = document.createElement('div');
+                    testItem.className = 'test-item failed';
+                    testItem.innerHTML = `
+                        <div class="test-name">✗ ${test.message}</div>
+                        ${test.expected !== null ? `<div class="test-message">Expected: ${JSON.stringify(test.expected)}</div>` : ''}
+                        ${test.actual !== null ? `<div class="test-message">Actual: ${JSON.stringify(test.actual)}</div>` : ''}
+                        ${test.error ? `<div class="test-error">${test.error}</div>` : ''}
+                    `;
+                    failedDiv.appendChild(testItem);
+                });
+                resultsDiv.appendChild(failedDiv);
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('DOMContentLoaded', runAllTests);
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Whitebox Harness</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 2rem; }
+        .nav-link { margin-right: 0.5rem; }
+        .filter-btn.active { font-weight: bold; }
+        .portfolio-item { padding: 0.5rem; border: 1px solid #ccc; margin-bottom: 0.25rem; }
+        .annotated-sample { margin-top: 1rem; padding: 0.5rem; border: 1px dashed #aaa; display: inline-block; }
+        #annotationTooltip { position: absolute; background: #000; color: #fff; padding: 0.25rem 0.5rem; border-radius: 4px; display: none; }
+        #annotationTooltip.active { display: block; }
+        #userFlowOverlay { position: relative; width: 100%; height: 200px; margin-top: 2rem; border: 1px solid #ddd; }
+        #userFlowOverlay .flow-connections { position: absolute; inset: 0; }
+        .gallery { min-height: 50px; }
+        .blog-posts { min-height: 50px; }
+        .contact-section { min-height: 50px; }
+    </style>
+</head>
+<body>
+    <header class="brand" data-annotation="Brand mark">Brand</header>
+    <nav>
+        <a href="#home" class="nav-link" data-page="home">Home</a>
+        <a href="#portfolio" class="nav-link" data-page="portfolio">Portfolio</a>
+        <a href="#blog" class="nav-link" data-page="blog">Blog</a>
+        <a href="#about" class="nav-link" data-page="about">About</a>
+    </nav>
+
+    <section class="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="portrait">Portrait</button>
+        <button class="filter-btn" data-filter="fashion">Fashion</button>
+    </section>
+
+    <section id="portfolioGrid">
+        <div class="portfolio-item" data-category="portrait">
+            <div class="image-placeholder"></div>
+            <div class="portfolio-content">
+                <h4>Portrait One</h4>
+                <span class="portfolio-category">portrait</span>
+            </div>
+        </div>
+        <div class="portfolio-item" data-category="fashion">
+            <div class="image-placeholder"></div>
+            <div class="portfolio-content">
+                <h4>Fashion One</h4>
+                <span class="portfolio-category">fashion</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="gallery">
+        <div class="gallery-item">
+            <div class="image-placeholder"></div>
+        </div>
+        <div class="gallery-item">
+            <div class="image-placeholder"></div>
+        </div>
+    </section>
+
+    <section class="blog-posts"></section>
+    <section class="contact-section">
+        <form id="contactForm">
+            <input type="text" value="Name">
+            <input type="email" value="email@example.com">
+            <textarea>Message</textarea>
+            <button type="submit">Send</button>
+        </form>
+    </section>
+
+    <div class="annotated-sample" data-annotation="Sample annotation target">Annotated Element</div>
+    <div id="annotationTooltip"><div class="tooltip-content"></div></div>
+
+    <div id="userFlowOverlay">
+        <div class="flow-connections"></div>
+    </div>
+
+    <script src="/script.js"></script>
+</body>
+</html>
+

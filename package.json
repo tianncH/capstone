@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "cypress": "^15.5.0"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1"
+  }
+}

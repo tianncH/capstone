@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Timestamp Updates</title>
+    <style>
+        .timer {
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px;
+        }
+        .timer-warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .timer-danger {
+            background-color: #dc3545;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Timestamp Updates</h1>
+    
+    <div class="timer">0m ago</div>
+    <div class="timer">5m ago</div>
+    <div class="timer">12m ago</div>
+    <div class="timer">20m ago</div>
+    
+    <p>These timestamps should update every minute:</p>
+    <ul>
+        <li>0m ago → 1m ago → 2m ago → 3m ago...</li>
+        <li>5m ago → 6m ago → 7m ago → 8m ago...</li>
+        <li>12m ago → 13m ago → 14m ago → 15m ago (turns red)</li>
+        <li>20m ago → 21m ago → 22m ago → 23m ago...</li>
+    </ul>
+    
+    <script>
+        // Real-time timestamp updates (same as kitchen system)
+        function updateTimestamps() {
+            const timers = document.querySelectorAll('.timer');
+            timers.forEach(timer => {
+                const currentText = timer.textContent;
+                const match = currentText.match(/(\d+)m ago/);
+                if (match) {
+                    const currentMinutes = parseInt(match[1]);
+                    const newMinutes = currentMinutes + 1;
+                    timer.textContent = `${newMinutes}m ago`;
+                    
+                    // Update timer classes based on elapsed time
+                    timer.className = 'timer';
+                    if (newMinutes >= 15) {
+                        timer.classList.add('timer-danger');
+                    } else if (newMinutes >= 10) {
+                        timer.classList.add('timer-warning');
+                    }
+                }
+            });
+        }
+        
+        // Update timestamps every minute
+        setInterval(updateTimestamps, 60000); // 60 seconds = 1 minute
+        
+        // For testing, also update every 5 seconds
+        setInterval(updateTimestamps, 5000); // 5 seconds for quick testing
+    </script>
+</body>
+</html>
+
+
+
+
+

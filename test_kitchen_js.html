@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Kitchen JavaScript</title>
+    <style>
+        .timer {
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .timer-warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .timer-danger {
+            background-color: #dc3545;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Kitchen JavaScript</h1>
+    
+    <div class="timer">0m ago</div>
+    <div class="timer">5m ago</div>
+    <div class="timer">12m ago</div>
+    
+    <p>These timers should update every 5 seconds for testing:</p>
+    
+    <div id="debug"></div>
+    
+    <script>
+        console.log("JavaScript is running!");
+        
+        // Real-time timestamp updates (same as kitchen system)
+        function updateTimestamps() {
+            console.log("Updating timestamps...");
+            const timers = document.querySelectorAll('.timer');
+            console.log("Found timers:", timers.length);
+            
+            timers.forEach((timer, index) => {
+                const currentText = timer.textContent;
+                console.log(`Timer ${index}: ${currentText}`);
+                
+                const match = currentText.match(/(\d+)m ago/);
+                if (match) {
+                    const currentMinutes = parseInt(match[1]);
+                    const newMinutes = currentMinutes + 1;
+                    timer.textContent = `${newMinutes}m ago`;
+                    
+                    console.log(`Updated timer ${index}: ${currentMinutes}m ago → ${newMinutes}m ago`);
+                    
+                    // Update timer classes based on elapsed time
+                    timer.className = 'timer';
+                    if (newMinutes >= 15) {
+                        timer.classList.add('timer-danger');
+                    } else if (newMinutes >= 10) {
+                        timer.classList.add('timer-warning');
+                    }
+                }
+            });
+            
+            document.getElementById('debug').innerHTML = `Last update: ${new Date().toLocaleTimeString()}`;
+        }
+        
+        // Update timestamps every 5 seconds for testing
+        setInterval(updateTimestamps, 5000);
+        
+        // Initial update
+        updateTimestamps();
+    </script>
+</body>
+</html>
+
+
+
+
+

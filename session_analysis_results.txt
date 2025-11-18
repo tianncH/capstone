@@ -1,0 +1,29 @@
+=== DEEP SESSION ANALYSIS ===
+
+1. ALL QR SESSIONS:
+Session 4: Table 1, Status: active, Confirmed: YES, Created: 2025-10-07 18:25:32
+Session 1: Table 3, Status: active, Confirmed: NO, Created: 2025-10-07 18:08:45
+Session 2: Table 4, Status: active, Confirmed: NO, Created: 2025-10-07 18:08:45
+Session 3: Table 1, Status: active, Confirmed: YES, Created: 2025-10-07 18:08:45
+
+2. TABLE 1 SESSION STATUS:
+Found active session for Table 1:
+- Session ID: 4
+- Status: active
+- Confirmed by Counter: YES
+- Created: 2025-10-07 18:25:32
+- Expires: 2025-10-07 14:25:32
+
+3. CUSTOMER PAGE QUERY TEST:
+Customer page WOULD find session:
+- Session ID: 4
+- Confirmed: YES
+
+4. COUNTER DASHBOARD QUERIES:
+Unconfirmed sessions: 2
+Confirmed sessions: 2
+
+5. QR SESSION NOTIFICATIONS:
+Notification 17: Session 4, Type: new_session, Status: acknowledged
+Notification 14: Session 1, Type: new_session, Status: pending
+Notification 15: Session 2, Type: new_session, Status: pending
